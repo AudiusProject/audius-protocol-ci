@@ -43,6 +43,8 @@ def build_sql(env):
 # be an active subscription, the INSERT will create 2 is_current=true records for the subscriber, user pair.
 # As identity is the source of truth, DELETE the is_delete=true record.
     inner_sql = """
+begin;
+
 INSERT INTO subscriptions (subscriber_id, user_id, is_current, is_delete) SELECT * FROM (
     SELECT *
     FROM (
@@ -69,9 +71,11 @@ WHERE created_at < '2023-01-10 05:00:00' AND is_current = true AND is_delete = t
     ) AS csv
     WHERE csv.subscriber_id = subscriptions.subscriber_id AND csv.user_id = subscriptions.user_id
 );
+
+commit;
 """
 
-    sql = sa.text("begin; \n\n " + inner_sql + " \n\n commit;")
+    sql = sa.text(inner_sql)
     sql = sql.bindparams(sa.bindparam("subscriber_ids"))
     sql = sql.bindparams(sa.bindparam("user_ids"))
     sql = sql.bindparams(sa.bindparam("is_currents"))
