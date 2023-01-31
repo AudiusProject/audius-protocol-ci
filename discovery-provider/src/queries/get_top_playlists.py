@@ -11,7 +11,6 @@ from src.queries.query_helpers import (
     create_followee_playlists_subquery,
     decayed_score,
     filter_to_playlist_mood,
-    get_current_user_id,
     get_users_by_id,
     get_users_ids,
     populate_playlist_metadata,
@@ -21,6 +20,7 @@ from src.utils.db_session import get_db_read_replica
 
 
 class GetTopPlaylistsArgs(TypedDict):
+    current_user_id: Optional[int]
     limit: Optional[int]
     mood: Optional[str]
     filter: Optional[str]
@@ -33,7 +33,7 @@ class TopPlaylistKind(str, enum.Enum):
 
 
 def get_top_playlists(kind: TopPlaylistKind, args: GetTopPlaylistsArgs):
-    current_user_id = get_current_user_id(required=False)
+    current_user_id = args.get("current_user_id")
 
     # Argument parsing and checking
     if kind not in ("playlist", "album"):
